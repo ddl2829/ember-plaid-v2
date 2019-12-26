@@ -1,15 +1,23 @@
 /* global Plaid:false */
 // Sets Plaid as a global read-only variable for eslint
 
-import Component from '@ember/component';
-import layout from '../templates/components/plaid-link';
+import Component from "@ember/component";
+import layout from "../templates/components/plaid-link";
 
-const OPTIONS = ['clientName', 'env', 'key', 'product', 'webhook', 'token', 'selectAccount'];
-const DEFAULT_LABEL = 'Link Bank Account'; // Displayed on button if no block is passed to component
+const OPTIONS = [
+  "clientName",
+  "env",
+  "key",
+  "product",
+  "webhook",
+  "token",
+  "selectAccount"
+];
+const DEFAULT_LABEL = "Link Bank Account"; // Displayed on button if no block is passed to component
 
 export default Component.extend({
   layout,
-  tagName: 'button',
+  tagName: "button",
   label: DEFAULT_LABEL,
 
   // Link action Parameters to pass into component via view
@@ -42,64 +50,79 @@ export default Component.extend({
     });
 
     return new Ember.RSVP.Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.type = 'text/javascript';
+      const script = document.createElement("script");
+      script.type = "text/javascript";
       script.async = true;
-      script.src = 'https://cdn.plaid.com/link/v2/stable/link-initialize.js';
+      script.src = "https://cdn.plaid.com/link/v2/stable/link-initialize.js";
       script.onload = resolve;
       script.onerror = reject;
-      document.getElementsByTagName('head')[0].appendChild(script);
+      document.getElementsByTagName("head")[0].appendChild(script);
     })
       .then(() => {
         this._link = window.Plaid.create(options);
       })
       .catch(() => {
-        this.get('_onError')();
-      })
+        this.get("_onError")();
+      });
   },
 
   click() {
-    this.send('clicked');
+    if (this.isDestroying || this.isDestroyed) {
+      return;
+    }
+    this.send("clicked");
     this._link.open();
   },
 
   _onError() {
-    this.send('errored');
+    if (this.isDestroying || this.isDestroyed) {
+      return;
+    }
+    this.send("errored");
   },
 
   _onLoad() {
-    this.send('loaded');
+    if (this.isDestroying || this.isDestroyed) {
+      return;
+    }
+    this.send("loaded");
   },
 
   _onExit: function(error, metadata) {
-    this.send('exited', error, metadata);
+    if (this.isDestroying || this.isDestroyed) {
+      return;
+    }
+    this.send("exited", error, metadata);
   },
 
   _onSuccess: function(token, metadata) {
-    this.send('succeeded', token, metadata);
+    if (this.isDestroying || this.isDestroyed) {
+      return;
+    }
+    this.send("succeeded", token, metadata);
   },
 
   actions: {
     // Send closure actions passed into component
 
     clicked() {
-      this.get('onOpen')();
+      this.get("onOpen")();
     },
 
     loaded() {
-      this.get('onLoad')();
+      this.get("onLoad")();
     },
 
     exited(error, metadata) {
-      this.get('onExit')(error, metadata);
+      this.get("onExit")(error, metadata);
     },
 
     errored() {
-      this.get('onError')();
+      this.get("onError")();
     },
 
     succeeded(token, metadata) {
-      this.get('onSuccess')(token, metadata);
+      this.get("onSuccess")(token, metadata);
     }
   }
 });
